@@ -1,5 +1,11 @@
 class Player:
     def __init__(self, player_arr):
+        """Class to represent players, you pass an array of
+        the player's stats(can be created by using BoxScore
+        class) with this object you can get particular
+        statistics of the player by creating a Player object.
+        """
+
         self.full_name = (player_arr[0].replace('_',' ')).title()
         self.position = player_arr[1]
         self.short_name = player_arr[2]

@@ -12,29 +12,16 @@ from random import randint
 import time
 from time import strftime
 import tweepy
-from google import search
+# from google import search
+from module import *
+from classes.boxscore import BoxScore
+from classes.player import Player
+from classes.twitterapi import TwitterAPI
 
-class TwitterAPI:
-    def __init__(self):
-        consumer_key = "cnR1gGNCK7r074goxvTLpgQTo"
-        consumer_secret = "4fxMzotbskdjN042n79FOiEieLgDxRHGPprO8plTnPtdyA85DC"
-        auth = tweepy.OAuthHandler(consumer_key, consumer_secret)
-        access_token = "701987958056886272-wp7KEjxHLPGvWtJMyaxrQF4IJ6EHdQL"
-        access_token_secret = "kk09NukPpYjyPuhmPQWNpzrOTyxnKuHqng9Fqge6peI4H"
-        auth.set_access_token(access_token, access_token_secret)
-        self.api = tweepy.API(auth)
 
-    def tweet(self, message):
-        self.api.update_status(status=message)
 
 #helpful function to return things in between tags.
-def find_between( s, first, last ):
-    try:
-        start = s.index( first ) + len( first )
-        end = s.index( last, start )
-        return s[start:end]
-    except ValueError:
-        return ""
+#find_between used to be here, putting it into boscore.py
 
 #returns a list of the games on the current day.
 def listGames():
@@ -45,7 +32,7 @@ def listGames():
     games = []
     #0323 is temp.
     url = "http://www.nba.com/gameline/{0}{1}{2}/".format(cyear,cmonth,cday)
-    print url
+    # print url
     page = urllib.urlopen(url).read()
     soup = BeautifulSoup.BeautifulSoup(page)
     boxscore = str(soup.find("div", {"id": "nbaSSOuter"}))
@@ -84,102 +71,13 @@ def listLosers(games):
     return losers
 
 #this function takes an abbreviation of a team and turns it into the team name.
-def translateTeams(team):
-
-    teamDict = {'ATL': 'Hawks',
-                'BKN': 'Nets',
-                'BOS': 'Celtics',
-                'CHA': 'Hornets',
-                'CHI': 'Bulls',
-                'CLE': 'Cavaliers',
-                'DAL': 'Mavericks',
-                'DEN': 'Nuggets',
-                'DET': 'Pistons',
-                'GSW': 'Warriors',
-                'HOU': 'Rockets',
-                'IND': 'Pacers',
-                'LAC': 'Clippers',
-                'LAL': 'Lakers',
-                'MEM': 'Grizzlies',
-                'MIA': 'Heat',
-                'MIL': 'Bucks',
-                'MIN': 'Timberwolves',
-                'NOP': 'Pelicans',
-                'NYK': 'Knicks',
-                'OKC': 'Thunder',
-                'ORL': 'Magic',
-                'PHI': '76ers',
-                'PHX': 'Suns',
-                'POR': 'Trailblazers',
-                'SAC': 'Kings',
-                'SAS': 'Spurs',
-                'TOR': 'Raptors',
-                'UTA': 'Jazz',
-                'WAS': 'Wizards'    }
-
-    return teamDict[team]
+#translateTeams() used to be here, put it into boxscore.py
 
 #takes mm:ss into seconds
-def minsToSeconds(time):
-    l = time.split(':')
-    return int(l[0])*60+int(l[1])
+#minstoseconds() used to be here, put it into boxscore.py (because that was the only shit that used it.)
 
 #returns the box score of the losing team as array of arrays.
-def boxScores(game,losers):
-    # print losers
-    p1, p2, p3, p4, p5, p6, p7, p8, p9, p10, p11, p12 = ([] for i in range(12))
-    boxScore = [p1, p2, p3, p4, p5, p6, p7, p8, p9, p10, p11, p12]
-    rawList = []
-    temp = []
-    temp1 = []
-    url = "http://" + game
-    page = urllib.urlopen(url).read()
-    soup = BeautifulSoup.BeautifulSoup(page)
-    firstBox = str(soup.findAll("table", {"id": "nbaGITeamStats"})[0])
-    secondBox = str(soup.findAll("table", {"id": "nbaGITeamStats"})[1])
-    gamesChecked = 0
-    for loser in losers:
-        gamesChecked += 1
-        if translateTeams(loser) in firstBox:
-            rawBox = firstBox
-        if translateTeams(loser) in secondBox:
-            rawBox = secondBox
-    try:
-         soup = BeautifulSoup.BeautifulSoup(rawBox)
-    except UnboundLocalError:
-        print datetime.datetime.now().time()
-        print 'game not finished yet, waiting 20 minutes and checking again.'
-        time.sleep(1200)
-    index = 0
-    while index<6:
-        playerStatsOdd = str(soup.findAll("tr", {"class": "odd"})[index])
-        rawList.append(playerStatsOdd)
-        playerStatsEven = str(soup.findAll("tr", {"class": "even"})[index])
-        rawList.append(playerStatsEven)
-        index += 1
-    for player in boxScore:
-        player.append(find_between(rawList[0],'/playerfile/','/index'))
-        if(find_between(rawList[0],'nbaGIPosition">','</td>'))=='&nbsp;':
-            player.append('')
-        else:
-            player.append(find_between(rawList[0],'nbaGIPosition">','</td>'))
-        rawList[0].rstrip("\n")
-        soupy = BeautifulSoup.BeautifulSoup(rawList[0])
-        for node in soupy.findAll('td'):
-            player.append(''.join(node.findAll(text=True)))
-        del rawList[0]
-    for element in boxScore:
-        if len(element) <= 10:
-            temp1.append(element)
-        elif minsToSeconds(element[4])<900:
-            temp.append(element)
-    for element in temp:
-        boxScore.remove(element)
-    for element in temp1:
-        boxScore.remove(element)
-    for stat in element:
-        stat = str(stat)
-    return boxScore
+#boxscore() used to be here, put it into boxscore.py as BoxScore (class)
 
 #returns field goal percentage
 def badFieldGoal(player):
@@ -656,18 +554,26 @@ alreadyTweeted = []
 
 def main():
     games = listGames()
-    print games
+    # print games
     losers = listLosers(games)
-    print losers
     for game in games:
-            shitter = worstPlayer(boxScores(game, losers))
-            print shitter
-            print '\n'
-            name = correctName(shitter[0])
-            handle = getHandle(name+' nba twitter')
-            # print name
-            nbaTweet =  tweet(worstPlayerRanking(boxScores(game, losers)), worstStat(shitter), handle, shitter)
-            print nbaTweet
+        boxscore_obj = BoxScore(game,losers)
+        boxscore = boxscore_obj.arr
+
+            #the block of code below is cool and works but doesnt use the classes that i made.
+            #this will be changed
+
+            #|||||||||||||||||
+            #vvvvvvvvvvvvvvvvv
+
+            # shitter = worstPlayer(boxScores(game, losers))
+            # print shitter
+            # print '\n'
+            # name = correctName(shitter[0])
+            # handle = getHandle(name+' nba twitter')
+            # # print name
+            # nbaTweet =  tweet(worstPlayerRanking(boxScores(game, losers)), worstStat(shitter), handle, shitter)
+            # print nbaTweet
 
             #below is commented out because i am testing this.
             #10/17
@@ -678,7 +584,7 @@ def main():
             #         twitter.tweet(nbaTweet)
             #     except tweepy.error.TweepError:
             #         continue
-            alreadyTweeted.append(game)
+            # alreadyTweeted.append(game)
 
 
 while True:
