@@ -290,12 +290,12 @@ def worstPlayer(boxScore):
     badStatList= badStats(boxScore)
     badPlayerBoxList = badPlayerBox(boxScore)
     ratingList = []
-    for idx, val in enumerate(badStatList):
-        ratingList.append(rateStat(badStatList[idx],badPlayerBoxList[idx]))
+    for i, val in enumerate(badStatList):
+        ratingList.append(rateStat(badStatList[i],badPlayerBoxList[i]))
     worstIndex = max(ratingList)
-    for idx, val in enumerate(ratingList):
+    for i, val in enumerate(ratingList):
         if val == worstIndex:
-            rightIndex = idx
+            rightIndex = i
             break
     return badPlayerBoxList[rightIndex]
 
@@ -305,8 +305,8 @@ def worstPlayerRanking(boxScore):
     badStatList= badStats(boxScore)
     badPlayerBoxList = badPlayerBox(boxScore)
     ratingList = []
-    for idx, val in enumerate(badStatList):
-        ratingList.append(rateStat(badStatList[idx],badPlayerBoxList[idx]))
+    for i, val in enumerate(badStatList):
+        ratingList.append(rateStat(badStatList[i],badPlayerBoxList[i]))
     worstIndex = max(ratingList)
     return worstIndex
 
@@ -341,10 +341,9 @@ def getHandle(name):
         # return '@'+find_between(url, 'twitter.com/','?lang=')
     return '@'+name
 
-#finds the players worst stat
-def worstStat(player):
+def fgRank(player):
     fg = 0
-    fieldGoal = player[5].split('-')
+    fieldGoal = (player.field_goal).split('-')
     if float(fieldGoal[1]) == 0:
         ratio = 0
     else:
@@ -360,9 +359,11 @@ def worstStat(player):
         fg = 3
     if ratio <= 0.25:
         fg = 4
+    return fg
 
+def tpRank(player):
     tp = 0
-    threePointer = player[6].split('-')
+    threePointer = (player.three_point).split('-')
     if float(threePointer[1]) == 0:
         ratio = 0
     else:
@@ -376,10 +377,11 @@ def worstStat(player):
         tp = 3
     if ratio <= 0.25 and ratio > 0.19:
         tp = 2
+    return tp
 
-
+def ftRank(player):
     ft = 0
-    freeThrow = player[7].split('-')
+    freeThrow = (player.free_throw).split('-')
     if float(freeThrow[1]) == 0:
         ratio = 0
     else:
@@ -395,10 +397,12 @@ def worstStat(player):
         ft = 1
     if float(freeThrow[1])==4 and ratio > 0:
         ft = 2
+    return ft
 
+def rbRank(player):
     reb = 0
-    oReb = int(player[9])
-    dReb = int(player[10])
+    oReb = int(player.o_reb)
+    dReb = int(player.d_reb)
     diff = dReb - oReb
     tReb = oReb+dReb
     if player[1] == 'C' and tReb < 10 and tReb > 4:
@@ -417,13 +421,16 @@ def worstStat(player):
         reb = 3
     if player[1] != 'C' and diff >10:
         reb = 4
+    return reb
 
-
+def flRank(player):
     foul = 0
-    pFouls = int(player[13])
+    pFouls = int(player.foul)
     if pFouls > 5:
         foul = 3
+    return foul
 
+def toRank(player):
     to = 0
     turnOver = int(player[15])
     if turnOver == 3:
@@ -434,11 +441,23 @@ def worstStat(player):
         to = 3
     if turnOver > 5:
         to = 4
+    return to
+
+#finds the players worst stat
+def worstStat(player):
+    fg = fgRank(player)
+    tp = tpRank(player)
+    ft = ftRank(player)
+    rb = rbRank(player)
+    fl = flRank(player)
+    to = toRank(player)
+
 
     statList = []
-    statList.extend((fg, tp, ft, reb, foul, to))
+    statList.extend((fg, tp, ft, reb, fl, to))
     worstStat = max(statList)
     worstIndex = statList.index(worstStat)
+
     if worstIndex == 0:
         return 'fg'
     if worstIndex == 1:
@@ -449,8 +468,9 @@ def worstStat(player):
         return 'reb'
     if worstIndex == 4:
         return 'foul'
-    elif worstIndex == 5:
+    if worstIndex == 5:
         return 'to'
+
 
 #determines what kind of tweet the bot should tweet about
 def tweet(rank, badStat, handle, player):
@@ -462,7 +482,7 @@ def tweet(rank, badStat, handle, player):
         return freeThrowTweet(rank, handle, player)
     if badStat == 'reb':
         return reboundTweet(rank, handle, player)
-    if badStat == 'foul':
+    if badStat == 'fl':
         return foulTweet(rank, handle, player)
     if badStat == 'to':
         return turnOverTweet(rank, handle, player)
@@ -550,15 +570,19 @@ def turnOverTweet(rank, handle, player):
     elif rank>11:
         return 'In an awful performance, '+handle+' had '+turnOver+' turnovers tonight. #nba'
 
-alreadyTweeted = []
 
 def main():
+    alreadyTweeted = []
     games = listGames()
-    # print games
     losers = listLosers(games)
+    print losers
     for game in games:
         boxscore_obj = BoxScore(game,losers)
         boxscore = boxscore_obj.arr
+        player_arr = worstPlayer(boxscore)
+        player = Player(player_arr)
+
+
 
             #the block of code below is cool and works but doesnt use the classes that i made.
             #this will be changed
@@ -589,5 +613,6 @@ def main():
 
 while True:
     main()
-    print datetime.datetime.now().time()
+    # print datetime.datetime.now().time()
+    print '___________________________'
     time.sleep(1200)

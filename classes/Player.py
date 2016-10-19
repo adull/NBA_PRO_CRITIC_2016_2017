@@ -15,5 +15,6 @@ class Player:
         self.free_throw = player_arr[7]
         self.o_reb = player_arr[9]
         self.d_reb = player_arr[10]
-        self.p_foul = player_arr[13]
+        self.foul = player_arr[13]
         self.turnover = player_arr[15]
+        

@@ -25,13 +25,13 @@ class BoxScore:
             # there are two boxes ()
             if translate_teams(loser) in firstBox:
                 rawBox = firstBox
-            else:
+            if translate_teams(loser) in secondBox:
                 rawBox = secondBox
         try:
              soup = BeautifulSoup.BeautifulSoup(rawBox)
         except UnboundLocalError:
-            print datetime.datetime.now().time()
-            print 'game not finished, waiting 20 minutes and checking again.'
+            # print datetime.datetime.now().time()
+            # print 'game not finished, waiting 20 minutes and checking again.'
             time.sleep(1200)
         index = 0
         while index<6:
